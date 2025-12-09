@@ -1,5 +1,5 @@
 const db = {
-    type: 'postgres',
+    type: 'postgres' as const,
     host: 'localhost',
     port: 5432,
     username: 'admin',
