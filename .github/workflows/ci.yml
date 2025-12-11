@@ -29,10 +29,10 @@ jobs:
       run: cd backend && npm ci
     
     - name: Lint (Warning only)
-      run: cd backend && npm run lint || true  # ✅ Continue malgré erreurs
+      run: cd backend && npm run lint || true 
     
     - name: Test Unit
-      run: cd backend && npm run test || true  # ✅ Continue
+      run: cd backend && npm run test || true  
     
     - name: Build Production
       run: cd backend && npm run build

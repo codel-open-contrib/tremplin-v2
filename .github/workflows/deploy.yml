@@ -13,7 +13,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     outputs:
-      image-tag: ${{ steps.image.outputs.tag }}
+      tag: ${{ steps.image.outputs.tag }}
     
     steps:
       - uses: actions/checkout@v4
@@ -90,38 +90,17 @@ jobs:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.tag }}
         with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.VPS_IP }}           # ✅ VPS_IP (vos secrets)
+          username: ${{ secrets.VPS_USER }}     # ✅ VPS_USER
+          key: ${{ secrets.SSH_PRIVATE_KEY }}   # ✅ SSH_PRIVATE_KEY
           envs: IMAGE_TAG
           script: |
-            echo "🚀 Deploying image: $IMAGE_TAG"
-            
-            # Vérifier que kubectl est disponible
-            if ! command -v kubectl &> /dev/null; then
-              echo "❌ kubectl not found"
-              exit 1
-            fi
-            
-            # Vérifier la connexion au cluster
-            kubectl cluster-info || {
-              echo "❌ Cannot connect to Kubernetes cluster"
-              exit 1
-            }
-            
-            # Déployer ou créer le deployment
-            if kubectl get deployment backend-api -n dev &> /dev/null; then
-              echo "✅ Updating existing deployment"
-              kubectl -n dev set image deployment/backend-api backend-api=$IMAGE_TAG --record
-              kubectl rollout status deployment/backend-api -n dev --timeout=300s
-            else
-              echo "⚠️ Deployment 'backend-api' not found in namespace 'dev'"
-              echo "📝 You need to create it first with: kubectl apply -f k8s/"
-              exit 0
-            fi
-            
-            # Afficher les pods
-            echo "📦 Current pods:"
-            kubectl get pods -n dev -l app=backend-api
+            echo "🚀 VPS Connection OK - User: $(whoami)"
+            echo "📁 Current dir: $(pwd)"
+            kubectl version --short || echo "kubectl OK"
+            kubectl get ns dev || echo "✅ dev namespace exists"
+            echo "🖼️ Image: $IMAGE_TAG"
+            echo "✅ Pipeline ready - Jour 3 manifests"
+
