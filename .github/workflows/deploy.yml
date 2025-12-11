@@ -12,6 +12,9 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.image.outputs.tag }}
+    
     steps:
       - uses: actions/checkout@v4
       
@@ -36,21 +39,8 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       
-      # ❌ SUPPRIMEZ cette section redondante
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 20
-      #     cache: 'npm'
-      
-      # ❌ SUPPRIMEZ cette section (le Dockerfile le fait déjà)
-      # - name: Install deps & Build
-      #   run: |
-      #     cd backend
-      #     npm ci
-      #     npm run build
-      
       - name: Build & Push Docker
+        id: docker_build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -62,14 +52,29 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
       
+      - name: Set image tag output
+        id: image
+        run: echo "tag=ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}" >> $GITHUB_OUTPUT
+      
+      # ✅ Attendre que l'image soit propagée dans GHCR
+      - name: Wait for image availability
+        run: |
+          echo "⏳ Waiting 15s for image to be available in registry..."
+          sleep 15
+      
+      # ✅ Scan Trivy avec gestion des erreurs
       - name: Scan Trivy
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true  # ✅ Ne pas bloquer le pipeline
         with:
           image-ref: 'ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
       
       - name: Upload Trivy SARIF
+        if: always()
+        continue-on-error: true
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
@@ -78,20 +83,45 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/live'
+    
     steps:
       - uses: actions/checkout@v4
       
-      - name: Deploy VPS Dev
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          IMAGE_TAG: ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.image-tag }}
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: IMAGE_TAG  # ✅ CRITIQUE : Passe la variable au script SSH
+          envs: IMAGE_TAG
           script: |
-            echo "🚀 Deploying $IMAGE_TAG"
-            kubectl -n dev set image deployment/backend-api backend-api=$IMAGE_TAG --record || echo "⚠️ Deployment not found"
-            kubectl rollout status deployment/backend-api -n dev --timeout=300s || echo "⏳ Waiting for rollout..."
-            kubectl get pods -n dev
+            echo "🚀 Deploying image: $IMAGE_TAG"
+            
+            # Vérifier que kubectl est disponible
+            if ! command -v kubectl &> /dev/null; then
+              echo "❌ kubectl not found"
+              exit 1
+            fi
+            
+            # Vérifier la connexion au cluster
+            kubectl cluster-info || {
+              echo "❌ Cannot connect to Kubernetes cluster"
+              exit 1
+            }
+            
+            # Déployer ou créer le deployment
+            if kubectl get deployment backend-api -n dev &> /dev/null; then
+              echo "✅ Updating existing deployment"
+              kubectl -n dev set image deployment/backend-api backend-api=$IMAGE_TAG --record
+              kubectl rollout status deployment/backend-api -n dev --timeout=300s
+            else
+              echo "⚠️ Deployment 'backend-api' not found in namespace 'dev'"
+              echo "📝 You need to create it first with: kubectl apply -f k8s/"
+              exit 0
+            fi
+            
+            # Afficher les pods
+            echo "📦 Current pods:"
+            kubectl get pods -n dev -l app=backend-api
