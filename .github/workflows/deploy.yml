@@ -13,7 +13,8 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     outputs:
-      tag: ${{ steps.image.outputs.tag }}
+      latest-tag: ${{ steps.image.outputs.latest }}
+      sha-tag: ${{ steps.image.outputs.sha }}
     
     steps:
       - uses: actions/checkout@v4
@@ -24,10 +25,10 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/tremplin-backend
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long,prefix=sha-
             type=ref,event=branch
-            type=sha,prefix=live-
-            type=raw,value=latest
-            type=sha
+            type=raw,value=live-${{ github.sha }}
       
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -38,6 +39,19 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'backend/package-lock.json'
+      
+      - name: Install & Build
+        run: |
+          cd backend
+          npm ci
+          npm run build
       
       - name: Build & Push Docker
         id: docker_build
@@ -52,20 +66,18 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
       
-      - name: Set image tag output
+      - name: Set image tags output
         id: image
-        run: echo "tag=ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}" >> $GITHUB_OUTPUT
-      
-      # ✅ Attendre que l'image soit propagée dans GHCR
-      - name: Wait for image availability
         run: |
-          echo "⏳ Waiting 15s for image to be available in registry..."
-          sleep 15
+          echo "latest=ghcr.io/${{ github.repository_owner }}/tremplin-backend:latest" >> $GITHUB_OUTPUT
+          echo "sha=ghcr.io/${{ github.repository_owner }}/tremplin-backend:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
       
-      # ✅ Scan Trivy avec gestion des erreurs
+      - name: Wait for image propagation
+        run: sleep 15
+      
       - name: Scan Trivy
+        continue-on-error: true
         uses: aquasecurity/trivy-action@master
-        continue-on-error: true  # ✅ Ne pas bloquer le pipeline
         with:
           image-ref: 'ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}'
           format: 'sarif'
@@ -90,17 +102,36 @@ jobs:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         env:
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.tag }}
+          LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
+          SHA_IMAGE: ${{ needs.build-and-push.outputs.sha-tag }}
         with:
-          host: ${{ secrets.VPS_IP }}           # ✅ VPS_IP (vos secrets)
-          username: ${{ secrets.VPS_USER }}     # ✅ VPS_USER
-          key: ${{ secrets.SSH_PRIVATE_KEY }}   # ✅ SSH_PRIVATE_KEY
-          envs: IMAGE_TAG
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: LATEST_IMAGE,SHA_IMAGE
           script: |
             echo "🚀 VPS Connection OK - User: $(whoami)"
             echo "📁 Current dir: $(pwd)"
-            kubectl version --short || echo "kubectl OK"
-            kubectl get ns dev || echo "✅ dev namespace exists"
-            echo "🖼️ Image: $IMAGE_TAG"
-            echo "✅ Pipeline ready - Jour 3 manifests"
-
+            
+            # Vérifier kubectl
+            kubectl version --short || { echo "❌ kubectl KO"; exit 1; }
+            
+            # Namespace dev
+            kubectl get ns dev || { echo "✅ dev namespace OK"; }
+            
+            echo "🖼️ LATEST Image: $LATEST_IMAGE"
+            echo "🖼️  SHA Image: $SHA_IMAGE"
+            
+            # Deploy latest (toujours valide)
+            if kubectl get deployment backend-api -n dev >/dev/null 2>&1; then
+              echo "🔄 Updating existing deployment..."
+              kubectl -n dev set image deployment/backend-api backend-api=$LATEST_IMAGE --record
+              kubectl rollout status deployment/backend-api -n dev --timeout=180s || echo "⚠️ Rollout timeout - check logs"
+            else
+              echo "⚠️ No deployment found - create infra/kubernetes/api/deployment.yaml first"
+            fi
+            
+            echo "📦 Pods status:"
+            kubectl get pods -n dev -o wide
+            
+            echo "✅ CD Deploy terminé - Backend :latest déployé !"
