@@ -36,7 +36,7 @@ export class OffreService {
   }
 
   async modifierOffre(ref: number, offreData: Partial<Offre>): Promise<Offre> {
-    let offre = await this.offreRepository.findOne({ where: { ref: ref } });
+    const offre = await this.offreRepository.findOne({ where: { ref: ref } });
     if(!offre) {
         throw new NotFoundException(`Offre with ${ref} not found`);
     }

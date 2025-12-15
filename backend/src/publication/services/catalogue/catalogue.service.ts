@@ -48,7 +48,7 @@ export class CatalogueService {
     }
 
     async modifierCatalogue(ref: number, catalogueData: Partial<Catalogue>): Promise<Catalogue> {
-        let catalogue = await this.catalogueRepository.findOne({ where: { ref: ref } });
+        const catalogue = await this.catalogueRepository.findOne({ where: { ref: ref } });
         if(!catalogue) {
             throw new NotFoundException(`Catalogue with ${ref} not found`);
         }

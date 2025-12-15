@@ -48,7 +48,7 @@ export class ModuleCoursService {
   }
 
   async modifierModuleCours(idModule: number, moduleCoursData: Partial<ModuleCours>): Promise<ModuleCours> {
-    let moduleCours = await this.moduleCoursRepository.findOne({ where: { idModule: idModule } });
+    const moduleCours = await this.moduleCoursRepository.findOne({ where: { idModule: idModule } });
     if(!moduleCours) {
         throw new NotFoundException(`ModuleCours with ${idModule} not found`);
     }

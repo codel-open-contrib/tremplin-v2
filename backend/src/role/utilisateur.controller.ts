@@ -33,7 +33,7 @@ export class UtilisateurController {
     }
 
     @Post(':email')
-    seConnecter(@Param('email') email: string, @Body() utisateurData: any): Promise<Object> {
+    seConnecter(@Param('email') email: string, @Body() utisateurData: unknown): Promise<object> {
         return this.utilisateurService.seConnecter(utisateurData);
     }
     @Get('/check/:email')
