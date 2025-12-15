@@ -13,7 +13,7 @@ export class MinioController {
     const bucket = minioConfig.MINIO_BUCKET_NAME;
     const objectName = `${Date.now()}-${file.originalname}`;
 
-    await this.minioService.uploadFile(bucket, objectName, file.buffer, file.mimetype,);
+    await this.minioService.uploadFile(bucket, objectName, file.buffer,);
 
     return {
       message: 'Uploaded successfully',

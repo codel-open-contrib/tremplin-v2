@@ -50,7 +50,7 @@ export class UtilisateurService {
     }
 
     async seConnecter(utilisateurData: unknown): Promise<object> {
-        const utilisateur = await this.utilisateurRepository.findOne({ where: { email: utilisateurData.email } });
+        const utilisateur = await this.utilisateurRepository.findOne({ where: { email: (utilisateurData as any).email } });
 
         if(!utilisateur) {
             return {
@@ -60,7 +60,7 @@ export class UtilisateurService {
                 }
             }
         }
-        if(utilisateur.mdp == utilisateurData.mdp) {
+        if(utilisateur.mdp == (utilisateurData as any).mdp) {
             return {
                 "errors": {
                     "email": false,
@@ -69,7 +69,7 @@ export class UtilisateurService {
                 "data": {
                     "uid": utilisateur.uid,
                     "profile": utilisateur.profile,
-                    "nom": utilisateur.mdp as unknown.nom,
+                    "nom": utilisateur.mdp as unknown,
                     "prenoms": utilisateur.prenoms,
                     "tel": utilisateur.tel,
                     "email": utilisateur.email
