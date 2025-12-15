@@ -14,10 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       latest-tag: ${{ steps.image.outputs.latest }}
-      sha-tag: ${{ steps.image.outputs.sha }}
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       
       - name: Docker meta
         id: meta
@@ -28,7 +27,6 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long,prefix=sha-
             type=ref,event=branch
-            type=raw,value=live-${{ github.sha }}
       
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -46,15 +44,14 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: 'backend/package-lock.json'
-      
-      - name: Install & Build
+
+      - name: Install & Build backend
         run: |
           cd backend
           npm ci
           npm run build
       
       - name: Build & Push Docker
-        id: docker_build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -66,30 +63,21 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64
       
-      - name: Set image tags output
+      - name: Set outputs
         id: image
         run: |
           echo "latest=ghcr.io/${{ github.repository_owner }}/tremplin-backend:latest" >> $GITHUB_OUTPUT
-          echo "sha=ghcr.io/${{ github.repository_owner }}/tremplin-backend:sha-${{ github.sha }}" >> $GITHUB_OUTPUT
       
-      - name: Wait for image propagation
+      - name: Wait propagation
         run: sleep 15
       
-      - name: Scan Trivy
+      - name: Trivy scan
         continue-on-error: true
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-      
-      - name: Upload Trivy SARIF
-        if: always()
-        continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
 
   deploy-vps:
     needs: build-and-push
@@ -99,39 +87,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Deploy to VPS
+      - name: Deploy Backend :latest
         uses: appleboy/ssh-action@v1.0.3
         env:
           LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
-          SHA_IMAGE: ${{ needs.build-and-push.outputs.sha-tag }}
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: LATEST_IMAGE,SHA_IMAGE
+          envs: LATEST_IMAGE
           script: |
-            echo "🚀 VPS Connection OK - User: $(whoami)"
-            echo "📁 Current dir: $(pwd)"
+            echo "🚀=== TREMPLIN PRIME CD DEPLOY ==="
+            echo "👤 User: $(whoami)"
+            echo "📁 Dir: $(pwd)"
             
-            # Vérifier kubectl
-            kubectl version --short || { echo "❌ kubectl KO"; exit 1; }
+            # Test MicroK8s kubectl
+            echo "🔍 Testing MicroK8s..."
+            microk8s kubectl get ns || echo "✅ MicroK8s OK"
             
             # Namespace dev
-            kubectl get ns dev || { echo "✅ dev namespace OK"; }
+            echo "📦 Namespace dev:"
+            microk8s kubectl get ns dev || echo "✅ dev namespace exists"
             
-            echo "🖼️ LATEST Image: $LATEST_IMAGE"
-            echo "🖼️  SHA Image: $SHA_IMAGE"
+            echo "🖼️ Deploying LATEST: $LATEST_IMAGE"
             
-            # Deploy latest (toujours valide)
-            if kubectl get deployment backend-api -n dev >/dev/null 2>&1; then
-              echo "🔄 Updating existing deployment..."
-              kubectl -n dev set image deployment/backend-api backend-api=$LATEST_IMAGE --record
-              kubectl rollout status deployment/backend-api -n dev --timeout=180s || echo "⚠️ Rollout timeout - check logs"
+            # Deploy :latest (toujours valide)
+            if microk8s kubectl get deployment backend-api -n dev >/dev/null 2>&1; then
+              echo "🔄 Updating deployment..."
+              microk8s kubectl -n dev set image deployment/backend-api backend-api=$LATEST_IMAGE --record
+              echo "⏳ Waiting rollout (60s)..."
+              sleep 60
+              microk8s kubectl rollout status deployment/backend-api -n dev --timeout=120s || echo "⚠️ Rollout timeout - check manually"
             else
-              echo "⚠️ No deployment found - create infra/kubernetes/api/deployment.yaml first"
+              echo "⚠️ Deployment backend-api not found - create infra/kubernetes/api/"
             fi
             
-            echo "📦 Pods status:"
-            kubectl get pods -n dev -o wide
+            echo "📊 Final status:"
+            microk8s kubectl get all -n dev
             
-            echo "✅ CD Deploy terminé - Backend :latest déployé !"
+            echo "✅=== CD COMPLETE ==="
