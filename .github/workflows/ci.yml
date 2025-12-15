@@ -1,4 +1,4 @@
-name: CI Backend - Tremplin Prime
+name: CI Backend Tremplin Prime - STRICT
 
 on:
   push:
@@ -7,10 +7,10 @@ on:
     branches: [ live ]
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4  # ✅ v4 latest
     
     - name: Setup Node.js 20
       uses: actions/setup-node@v4
@@ -28,19 +28,68 @@ jobs:
     - name: Install dependencies
       run: cd backend && npm ci
     
-    - name: Lint (Warning only)
-      run: cd backend && npm run lint || true 
+    # ✅ STRICT : ZERO ERRORS ESLint
+    - name: ESLint Strict
+      run: cd backend && npm run lint
     
-    - name: Test Unit
-      run: cd backend && npm run test || true  
+    # ✅ STRICT : TypeScript compilation
+    - name: TypeScript Check
+      run: cd backend && npx tsc --noEmit
     
-    - name: Build Production
-      run: cd backend && npm run build
+    # ✅ STRICT : Unit tests + coverage
+    - name: Unit Tests
+      run: cd backend && npm run test
     
-    - name: Success Badge
+    # ✅ STRICT : Coverage >80%
+    - name: Test Coverage
+      run: |
+        cd backend
+        npm run test:cov
+        # Check coverage threshold
+        grep -q "All files\|Statements.* 80" coverage/lcov-report/index.html || {
+          echo "❌ Coverage <80% - Fix tests !"
+          exit 1
+        }
+    
+    # 🛡️ TRIVY STRICT : Security Scan
+    - name: Docker Security Scan (STRICT)
+      run: |
+        docker build -t tremplin-backend:test .
+        docker run --rm aquasec/trivy:latest image tremplin-backend:test \
+          --severity CRITICAL,HIGH \
+          --exit-code 1 \
+          --no-progress \
+          --format table
+    
+    # ✅ STRICT : Security Audit NPM
+    - name: NPM Security Audit
+      run: cd backend && npm audit --audit-level high
+    
+    # ✅ STRICT : Production Build
+    - name: Production Build
+      run: |
+        cd backend
+        npm run build
+        echo "✅ Build OK - 0 errors"
+    
+    # ✅ Docker Build Test
+    - name: Docker Build Test
+      run: docker build -t tremplin-backend:test .
+    
+    # 🎉 SUCCESS Summary
+    - name: CI Success Report
       if: success()
-      run: echo "CI ✅ PASS"
+      run: |
+        echo "| ✅ CI STRICT | 100% Green |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🧪 Tests | 100% PASS |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🛡️ Security | No CRITICAL/HIGH |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📦 Docker | Build OK |" >> $GITHUB_STEP_SUMMARY
+        echo "🎉 Prêt pour démo soutenance !"
     
-    - name: Warning Badge
-      if: always()
-      run: echo "CI ⚠️ Warnings OK - Continue deploy"
+    # ❌ Failure Report
+    - name: CI Failure Report
+      if: failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          core.setFailed('❌ CI STRICT FAILED\nFix: ESLint/Tests/Security avant démo !')
