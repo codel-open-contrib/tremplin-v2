@@ -14,5 +14,3 @@ Put dbms config in backend/src/db.ts and object storage in minio module then
 ``
 nest start
 ``
-
-Frontend comming soon 🕜
