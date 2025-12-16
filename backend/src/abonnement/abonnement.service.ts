@@ -36,7 +36,7 @@ export class AbonnementService {
   }
 
   async modifierAbonnement(ref: number, abonnementData: Partial<Abonnement>): Promise<Abonnement> {
-    let abonnement = await this.abonnementRepository.findOne({ where: { ref: ref } });
+    const abonnement = await this.abonnementRepository.findOne({ where: { ref: ref } });
     if(!abonnement) {
         throw new NotFoundException(`Abonnement with ${ref} not found`);
     }

@@ -49,7 +49,7 @@ export class InscriptionService {
   }
 
   async modifierInscription(idInscription: number, InscriptionData: Partial<Inscription>): Promise<Inscription> {
-    let inscription = await this.inscriptionRepository.findOne({ where: { idInscription: idInscription } });
+    const inscription = await this.inscriptionRepository.findOne({ where: { idInscription: idInscription } });
     if(!inscription) {
         throw new NotFoundException(`Inscription with ${idInscription} not found`);
     }

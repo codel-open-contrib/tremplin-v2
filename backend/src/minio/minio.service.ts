@@ -16,7 +16,7 @@ export class MinioService {
     });
   }
 
-  async uploadFile(bucket: string, objectName: string, fileBuffer: Buffer, mimeType: string) {
+  async uploadFile(bucket, objectName, fileBuffer: Buffer) {
     const exists = await this.minioClient.bucketExists(bucket);
     if (!exists) {
       await this.minioClient.makeBucket(bucket, 'us-east-1');
@@ -24,7 +24,7 @@ export class MinioService {
     return this.minioClient.putObject(bucket, objectName, fileBuffer);
   }
 
-  getPublicUrl(bucket: string, objectName: string) {
+  getPublicUrl(bucket, objectName) {
     return `http://localhost:9000/${bucket}/${objectName}`;
   }
 }

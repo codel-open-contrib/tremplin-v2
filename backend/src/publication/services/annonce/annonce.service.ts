@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Annonce } from 'src/publication/entities/annonce.entity';
 import { Repository } from 'typeorm';
-Repository
 
 @Injectable()
 export class AnnonceService {
@@ -44,7 +43,7 @@ export class AnnonceService {
     }
 
     async modifierAnnonce(ref: number, annonceData: Partial<Annonce>): Promise<Annonce> {
-        let annonce = await this.annonceRepository.findOne({ where: { ref: ref } });
+        const annonce = await this.annonceRepository.findOne({ where: { ref: ref } });
         if(!annonce) {
             throw new NotFoundException(`Annonce with ${ref} not found`);
         }

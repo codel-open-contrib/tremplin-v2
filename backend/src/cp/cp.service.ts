@@ -1,25 +1,34 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Cp } from './cp.entity';
 
 @Injectable()
 export class CpService {
-  create(createCpDto: Cp) {
-    return 'This action adds a new cp';
+  constructor(
+    @InjectRepository(Cp)
+    private cpRepository: Repository<Cp>,
+  ) {}
+
+  async findAll(): Promise<Cp[]> {
+    return this.cpRepository.find();
   }
 
-  findAll() {
-    return `This action returns all cp`;
+  async findOne(id: number): Promise<Cp> {
+    return this.cpRepository.findOneBy({ id });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cp`;
+  async create(createCpDto: Partial<Cp>): Promise<Cp> {
+    const cp = this.cpRepository.create(createCpDto);
+    return this.cpRepository.save(cp);
   }
 
-  update(id: number, Cp: Cp) {
-    return `This action updates a #${id} cp`;
+  async update(id: number, updateCpDto: Partial<Cp>): Promise<Cp> {
+    await this.cpRepository.update(id, updateCpDto);
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cp`;
+  async remove(id: number): Promise<void> {
+    await this.cpRepository.delete(id);
   }
 }

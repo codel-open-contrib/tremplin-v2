@@ -42,7 +42,7 @@ export class CoursService {
   }
 
   async modifierCours(code: number, coursData: Partial<Cours>): Promise<Cours> {
-    let cours = await this.coursRepository.findOne({ where: { code: code } });
+    const cours = await this.coursRepository.findOne({ where: { code: code } });
     if(!cours) {
         throw new NotFoundException(`Cours with ${code} not found`);
     }

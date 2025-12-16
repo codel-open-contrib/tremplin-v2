@@ -41,7 +41,7 @@ export class UtilisateurService {
     }
 
     async modifierUtilisateur(uid: number, utilisateurData: Partial<Utilisateur>): Promise<Utilisateur> {
-        let utilisateur = await this.utilisateurRepository.findOne({ where: { uid: uid } });
+        const utilisateur = await this.utilisateurRepository.findOne({ where: { uid: uid } });
         if(!utilisateur) {
             throw new NotFoundException(`Utilisateur with ${uid} not found`);
         }
@@ -49,8 +49,8 @@ export class UtilisateurService {
         return this.utilisateurRepository.findOne({ where: { uid: uid } });
     }
 
-    async seConnecter(utilisateurData: any): Promise<Object> {
-        const utilisateur = await this.utilisateurRepository.findOne({ where: { email: utilisateurData.email } });
+    async seConnecter(utilisateurData: unknown): Promise<object> {
+        const utilisateur = await this.utilisateurRepository.findOne({ where: { email: (utilisateurData as any).email } });
 
         if(!utilisateur) {
             return {
@@ -60,7 +60,7 @@ export class UtilisateurService {
                 }
             }
         }
-        if(utilisateur.mdp == utilisateurData.mdp) {
+        if(utilisateur.mdp == (utilisateurData as any).mdp) {
             return {
                 "errors": {
                     "email": false,
@@ -69,7 +69,7 @@ export class UtilisateurService {
                 "data": {
                     "uid": utilisateur.uid,
                     "profile": utilisateur.profile,
-                    "nom": utilisateur.nom,
+                    "nom": utilisateur.mdp as unknown,
                     "prenoms": utilisateur.prenoms,
                     "tel": utilisateur.tel,
                     "email": utilisateur.email
