@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       latest-tag: ${{ steps.image.outputs.latest }}
+      frontend-latest: ${{ steps.image.outputs.frontend-latest }}
     
     steps:
       - uses: actions/checkout@v3
@@ -50,8 +51,8 @@ jobs:
           cd backend
           npm ci
           npm run build
-      
-      - name: Build & Push Docker
+
+      - name: Build & Push Backend Docker
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -62,22 +63,62 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
-      
+
+      - name: Docker meta Frontend
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/tremplin-frontend
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=long,prefix=sha-
+            type=ref,event=branch
+
+      - name: Setup Node.js for Frontend
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'frontend-web/package-lock.json'
+
+      - name: Install & Build Frontend
+        run: |
+          cd frontend-web
+          npm ci
+          npm run build
+
+      - name: Build & Push Frontend Docker
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend-web
+          file: ./frontend-web/Dockerfile
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
       - name: Set outputs
         id: image
         run: |
           echo "latest=ghcr.io/${{ github.repository_owner }}/tremplin-backend:latest" >> $GITHUB_OUTPUT
+          echo "frontend-latest=ghcr.io/${{ github.repository_owner }}/tremplin-frontend:latest" >> $GITHUB_OUTPUT
       
       - name: Wait propagation
         run: sleep 15
-      
+
+      # === LE RETOUR DE TRIVY SCAN ===
       - name: Trivy scan
-        continue-on-error: true
+        continue-on-error: true # Pour ne pas bloquer le déploiement si des vulnérabilités mineures sont trouvées
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/tremplin-backend:${{ github.sha }}'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
+          image-ref: 'ghcr.io/${{ github.repository_owner }}/tremplin-backend:latest'
+          format: 'table' # 'table' est plus lisible dans les logs GitHub Actions
+          exit-code: '0'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
 
   deploy-vps:
     needs: build-and-push
@@ -87,61 +128,59 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Deploy Backend :latest
+      - name: Deploy Backend and Frontend via SSH
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: LATEST_IMAGE
+          envs: LATEST_IMAGE,LATEST_FRONTEND_IMAGE
+        env:
+          LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
+          LATEST_FRONTEND_IMAGE: ${{ needs.build-and-push.outputs.frontend-latest }}
           script: |
-            echo "🚀=== TREMPLIN PRIME CD DEPLOY ==="
-            echo "👤 User: $(whoami)"
-            echo "📁 Dir: $(pwd)"
+            echo "🚀=== TREMPLIN BACKEND DEPLOY ==="
+            cd ~
 
-            echo "🖼️ Deploying LATEST: $LATEST_IMAGE"
-            
-            # 1. On s'assure que le déploiement sait qu'il doit utiliser le secret d'authentification
+            # Mise à jour du tag dans le YAML backend
+            sed -i "s|image: ghcr.io/.*|image: $LATEST_IMAGE|g" backend-dev.yaml
+
+            echo "🔄 Applying updated backend-dev.yaml..."
+            microk8s kubectl apply -f backend-dev.yaml
+
+            # Patch pour le secret d'auth backend
             microk8s kubectl patch deployment backend-api -n dev -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-auth"}]}}}}'
-            
-            # 2. On met à jour l'image (votre commande d'origine)
-            if microk8s kubectl get deployment backend-api -n dev >/dev/null 2>&1; then
-              echo "🔄 Updating deployment..."
-              microk8s kubectl -n dev set image deployment/backend-api backend-api=$LATEST_IMAGE --record
-              
-              # Optionnel : Forcer le pull si le tag est "latest"
-              microk8s kubectl -n dev rollout restart deployment/backend-api 
-              
-              echo "⏳ Waiting rollout..."
-              microk8s kubectl rollout status deployment/backend-api -n dev --timeout=120s || echo "⚠️ Rollout timeout"
-            else
-              echo "⚠️ Deployment backend-api not found"
-            fi
-            
-            # Test MicroK8s kubectl
-            echo "🔍 Testing MicroK8s..."
-            microk8s kubectl get ns || echo "✅ MicroK8s OK"
-            
-            # Namespace dev
-            echo "📦 Namespace dev:"
-            microk8s kubectl get ns dev || echo "✅ dev namespace exists"
-            
-            echo "🖼️ Deploying LATEST: $LATEST_IMAGE"
-            
-            # Deploy :latest (toujours valide)
-            if microk8s kubectl get deployment backend-api -n dev >/dev/null 2>&1; then
-              echo "🔄 Updating deployment..."
-              microk8s kubectl -n dev set image deployment/backend-api backend-api=$LATEST_IMAGE --record
-              echo "⏳ Waiting rollout (60s)..."
-              sleep 60
-              microk8s kubectl rollout status deployment/backend-api -n dev --timeout=120s || echo "⚠️ Rollout timeout - check manually"
-            else
-              echo "⚠️ Deployment backend-api not found - create infra/kubernetes/api/"
-            fi
-            
-            echo "📊 Final status:"
-            microk8s kubectl get all -n dev
-            
-            echo "✅=== CD COMPLETE ==="
+
+            # Restart forcé backend
+            echo "🔄 Restarting backend deployment..."
+            microk8s kubectl rollout restart deployment/backend-api -n dev
+
+            # Vérification backend
+            echo "⏳ Waiting for backend rollout (max 120s)..."
+            microk8s kubectl rollout status deployment/backend-api -n dev --timeout=120s
+
+            echo "📊 Backend Pod Status:"
+            microk8s kubectl get pods -n dev -l app.kubernetes.io/name=tremplin-backend
+
+            echo "🚀=== TREMPLIN FRONTEND DEPLOY ==="
+
+            # Mise à jour du tag dans le YAML frontend
+            sed -i "s|image: ghcr.io/.*|image: $LATEST_FRONTEND_IMAGE|g" frontend-dev.yaml
+
+            echo "🔄 Applying updated frontend-dev.yaml..."
+            microk8s kubectl apply -f frontend-dev.yaml
+
+            # Patch pour le secret d'auth frontend
+            microk8s kubectl patch deployment frontend-app -n dev -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-auth"}]}}}}'
+
+            # Restart forcé frontend
+            echo "🔄 Restarting frontend deployment..."
+            microk8s kubectl rollout restart deployment/frontend-app -n dev
+
+            # Vérification frontend
+            echo "⏳ Waiting for frontend rollout (max 120s)..."
+            microk8s kubectl rollout status deployment/frontend-app -n dev --timeout=120s
+
+            echo "📊 Frontend Pod Status:"
+            microk8s kubectl get pods -n dev -l app.kubernetes.io/name=tremplin-frontend
+            echo "✅=== DEPLOY COMPLETE ==="
