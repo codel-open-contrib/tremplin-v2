@@ -100,6 +100,25 @@ jobs:
             echo "🚀=== TREMPLIN PRIME CD DEPLOY ==="
             echo "👤 User: $(whoami)"
             echo "📁 Dir: $(pwd)"
+
+            echo "🖼️ Deploying LATEST: $LATEST_IMAGE"
+            
+            # 1. On s'assure que le déploiement sait qu'il doit utiliser le secret d'authentification
+            microk8s kubectl patch deployment backend-api -n dev -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-auth"}]}}}}'
+            
+            # 2. On met à jour l'image (votre commande d'origine)
+            if microk8s kubectl get deployment backend-api -n dev >/dev/null 2>&1; then
+              echo "🔄 Updating deployment..."
+              microk8s kubectl -n dev set image deployment/backend-api backend-api=$LATEST_IMAGE --record
+              
+              # Optionnel : Forcer le pull si le tag est "latest"
+              microk8s kubectl -n dev rollout restart deployment/backend-api 
+              
+              echo "⏳ Waiting rollout..."
+              microk8s kubectl rollout status deployment/backend-api -n dev --timeout=120s || echo "⚠️ Rollout timeout"
+            else
+              echo "⚠️ Deployment backend-api not found"
+            fi
             
             # Test MicroK8s kubectl
             echo "🔍 Testing MicroK8s..."
