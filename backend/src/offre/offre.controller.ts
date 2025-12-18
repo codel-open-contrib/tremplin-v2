@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { OffreService } from './offre.service';
 import { Offre } from './offre.entity';
-import { CreateOffreDto, UpdateOffreDto } from 'src/dtos/offre.dto';
+import { CreateOffreDto, UpdateOffreDto } from '../dtos/offre.dto';
 
 @Controller('offre')
 export class OffreController {

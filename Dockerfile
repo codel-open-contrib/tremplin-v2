@@ -57,4 +57,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
 # Commande de démarrage
-CMD ["node", "dist/main.js"]
+# Point to compiled entry under dist/src (tsc emits files into dist/src)
+CMD ["node", "dist/src/main.js"]

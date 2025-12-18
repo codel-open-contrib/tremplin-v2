@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Delete ,Put, Body, Param } from '@nestjs/common';
-import { Annonce } from 'src/publication/entities/annonce.entity';
-import { AnnonceService } from 'src/publication/services/annonce/annonce.service';
-import { CreateAnnonceDto, UpdateAnnonceDto } from 'src/dtos/publication.dto';
+import { Annonce } from '../../entities/annonce.entity';
+import { AnnonceService } from '../../services/annonce/annonce.service';
+import { CreateAnnonceDto, UpdateAnnonceDto } from '../../../dtos/publication.dto';
 
 @Controller('annonce')
 export class AnnonceController {

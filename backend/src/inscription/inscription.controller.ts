@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { InscriptionService } from './inscription.service';
 import { Inscription } from './inscription.entity';
-import { CreateInscriptionDto, UpdateInscriptionDto } from 'src/dtos/inscription.dto';
+import { CreateInscriptionDto, UpdateInscriptionDto } from '../dtos/inscription.dto';
 
 @Controller('inscription')
 export class InscriptionController {

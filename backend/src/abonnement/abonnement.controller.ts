@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { AbonnementService } from './abonnement.service';
 import { Abonnement } from './abonnement.entity';
-import { CreateAbonnementDto, UpdateAbonnementDto } from 'src/dtos/abonnement.dto';
+import { CreateAbonnementDto, UpdateAbonnementDto } from '../dtos/abonnement.dto';
 
 @Controller('abonnement')
 export class AbonnementController {

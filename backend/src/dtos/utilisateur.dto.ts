@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsOptional } from "class-validator";
-import { UtilisateurRole } from "src/role/utilisateur-role.enum";
+import { UtilisateurRole } from "../role/utilisateur-role.enum";
 
 export class CreateUtilisateurDto {
     @IsNotEmpty()

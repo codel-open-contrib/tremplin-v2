@@ -1,6 +1,6 @@
-import { Cours } from "src/cours/cours.entity";
-import { Inscription } from "src/inscription/inscription.entity";
-import { Catalogue } from "src/publication/entities/catalogue.entity";
+import { Cours } from "../cours/cours.entity";
+import { Inscription } from "../inscription/inscription.entity";
+import { Catalogue } from "../publication/entities/catalogue.entity";
 import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()

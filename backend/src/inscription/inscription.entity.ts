@@ -1,5 +1,5 @@
-import { ModuleCours } from "src/module/module.entity";
-import { Utilisateur } from "src/role/utilisateur.entity";
+import { ModuleCours } from "../module/module.entity";
+import { Utilisateur } from "../role/utilisateur.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()

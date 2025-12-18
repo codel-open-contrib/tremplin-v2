@@ -1,7 +1,7 @@
 import { Entity, ManyToOne, OneToMany } from "typeorm";
 import { Publication } from "./publication.entity";
-import { Utilisateur } from "src/role/utilisateur.entity";
-import { ModuleCours } from "src/module/module.entity";
+import { Utilisateur } from "../../role/utilisateur.entity";
+import { ModuleCours } from "../../module/module.entity";
 
 @Entity()
 export class Catalogue extends Publication {

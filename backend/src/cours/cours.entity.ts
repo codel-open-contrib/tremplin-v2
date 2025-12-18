@@ -1,4 +1,4 @@
-import { ModuleCours } from "src/module/module.entity";
+import { ModuleCours } from "../module/module.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()

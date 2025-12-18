@@ -1,8 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { UtilisateurRole } from "./utilisateur-role.enum";
-import { Catalogue } from "src/publication/entities/catalogue.entity";
-import { Annonce } from "src/publication/entities/annonce.entity";
-import { Inscription } from "src/inscription/inscription.entity";
+import { Catalogue } from "../publication/entities/catalogue.entity";
+import { Annonce } from "../publication/entities/annonce.entity";
+import { Inscription } from "../inscription/inscription.entity";
 
 @Entity()
 export class Utilisateur {
