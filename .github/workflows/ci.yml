@@ -2,7 +2,7 @@ name: CI Backend Tremplin Prime - STRICT ✅
 
 on:
   push:
-    branches: [ live, main, develop ]
+    branches: [ live, main, develop, test ]
   pull_request:
     branches: [ live ]
 
@@ -22,27 +22,23 @@ jobs:
     - name: Install dependencies
       run: cd backend && npm ci
     
-    # ✅ ESLint (tolérant warnings)
+    # ✅ ESLint
     - name: ESLint
-      run: cd backend && npm run lint || true
-    
+      run: cd backend && npm run lint
+
     # ✅ TypeScript (dry-run)
     - name: TypeScript Check
-      run: cd backend && npx tsc --noEmit || true
-    
-    # ✅ Tests (skip si pas de tests)
+      run: cd backend && npx tsc --noEmit
+
+    # ✅ Tests
     - name: Unit Tests
-      run: cd backend && npm run test || echo "✅ Tests skipped"
-    
-    # ✅ Coverage (optionnel)
+      run: cd backend && npm run test
+
+    # ✅ Coverage
     - name: Test Coverage
       run: |
         cd backend
-        if npm run test:cov 2>/dev/null; then
-          echo "✅ Coverage OK"
-        else
-          echo "✅ Coverage skipped"
-        fi || true
+        npm run test:cov || echo "✅ Coverage failed"
     
     # ✅ Security Docker (tolérant)
     - name: Docker Security
@@ -52,20 +48,18 @@ jobs:
         docker run --rm aquasec/trivy:latest image tremplin-backend:test \
           --severity CRITICAL,HIGH --no-progress --format table || true
     
-    # ✅ NPM Security (tolérant)
+    # ✅ NPM Security
     - name: NPM Audit
       continue-on-error: true
-      run: cd backend && npm audit --audit-level high || true
-    
-    # ✅ Build Production (tolérant)
+      run: cd backend && npm audit --audit-level high
+
+    # ✅ Build Production
     - name: Production Build
-      run: |
-        cd backend
-        npm run build || echo "✅ Build skipped"
-    
+      run: cd backend && npm run build
+
     # ✅ Docker Build Backend
     - name: Docker Build Backend
-      run: docker build -t tremplin-backend:test . || true
+      run: docker build -t tremplin-backend:test .
 
     # === FRONTEND QUALITY CHECKS ===
 
@@ -81,19 +75,19 @@ jobs:
 
     # ✅ ESLint Frontend
     - name: ESLint Frontend
-      run: cd frontend-web && npm run lint || true
+      run: cd frontend-web && npm run lint
 
     # ✅ TypeScript Check Frontend
     - name: TypeScript Check Frontend
-      run: cd frontend-web && npx tsc --noEmit || true
+      run: cd frontend-web && npx tsc --noEmit
 
     # ✅ Build Frontend
     - name: Build Frontend
-      run: cd frontend-web && npm run build || true
+      run: cd frontend-web && npm run build
 
     # ✅ Docker Build Frontend
     - name: Docker Build Frontend
-      run: docker build -t tremplin-frontend:test ./frontend-web || true
+      run: docker build -t tremplin-frontend:test ./frontend-web
 
     # 🎉 Summary
     - name: Summary

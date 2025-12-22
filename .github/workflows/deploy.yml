@@ -52,6 +52,19 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build Backend Docker Locally
+        run: docker build -t tremplin-backend:local .
+
+      - name: Trivy scan Backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'tremplin-backend:local'
+          format: 'table'
+          exit-code: '1'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Build & Push Backend Docker
         uses: docker/build-push-action@v6
         with:
@@ -87,6 +100,19 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build Frontend Docker Locally
+        run: docker build -t tremplin-frontend:local ./frontend-web
+
+      - name: Trivy scan Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          image-ref: 'tremplin-frontend:local'
+          format: 'table'
+          exit-code: '1'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
       - name: Build & Push Frontend Docker
         uses: docker/build-push-action@v6
         with:
@@ -107,18 +133,6 @@ jobs:
       
       - name: Wait propagation
         run: sleep 15
-
-      # === LE RETOUR DE TRIVY SCAN ===
-      - name: Trivy scan
-        continue-on-error: true # Pour ne pas bloquer le déploiement si des vulnérabilités mineures sont trouvées
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: 'ghcr.io/${{ github.repository_owner }}/tremplin-backend:latest'
-          format: 'table' # 'table' est plus lisible dans les logs GitHub Actions
-          exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
-          severity: 'CRITICAL,HIGH'
 
   deploy-vps:
     needs: build-and-push
