@@ -36,9 +36,7 @@ jobs:
 
     # ✅ Coverage
     - name: Test Coverage
-      run: |
-        cd backend
-        npm run test:cov || echo "✅ Coverage failed"
+      run: cd backend && npm run test:cov
     
     # ✅ Security Docker (tolérant)
     - name: Docker Security

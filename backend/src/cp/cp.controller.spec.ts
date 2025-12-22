@@ -5,10 +5,23 @@ import { CpService } from './cp.service';
 describe('CpController', () => {
   let controller: CpController;
 
+  const mockCpService = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CpController],
-      providers: [CpService],
+      providers: [
+        {
+          provide: CpService,
+          useValue: mockCpService,
+        },
+      ],
     }).compile();
 
     controller = module.get<CpController>(CpController);

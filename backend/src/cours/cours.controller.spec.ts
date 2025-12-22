@@ -5,10 +5,23 @@ import { CoursService } from './cours.service';
 describe('CoursController', () => {
   let controller: CoursController;
 
+  const mockCoursService = {
+    obtenirListeCours: jest.fn(),
+    creerCours: jest.fn(),
+    obtenirCoursParCode: jest.fn(),
+    supprimerCours: jest.fn(),
+    modifierCours: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CoursController],
-      providers: [CoursService],
+      providers: [
+        {
+          provide: CoursService,
+          useValue: mockCoursService,
+        },
+      ],
     }).compile();
 
     controller = module.get<CoursController>(CoursController);
