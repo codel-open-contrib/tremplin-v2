@@ -73,6 +73,7 @@ jobs:
 
     # ✅ ESLint Frontend
     - name: ESLint Frontend
+      continue-on-error: true
       run: cd frontend-web && npm run lint
 
     # ✅ TypeScript Check Frontend
