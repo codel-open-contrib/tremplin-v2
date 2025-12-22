@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { UtilisateurService } from './utilisateur.service';
-import { CreateUtilisateurDto, UpdateUtilisateurDto } from '../dtos/utilisateur.dto';
+import { CreateUtilisateurDto, UpdateUtilisateurDto, LoginUtilisateurDto } from '../dtos/utilisateur.dto';
 import { Utilisateur } from './utilisateur.entity';
 
 @Controller('utilisateur')
@@ -32,9 +32,9 @@ export class UtilisateurController {
         return this.utilisateurService.modifierUtilisateur(uid, utilisateurData);
     }
 
-    @Post(':email')
-    seConnecter(@Param('email') email: string, @Body() utisateurData: unknown): Promise<object> {
-        return this.utilisateurService.seConnecter(utisateurData);
+    @Post('login')
+    seConnecter(@Body() utilisateurData: LoginUtilisateurDto): Promise<object> {
+        return this.utilisateurService.seConnecter(utilisateurData);
     }
     @Get('/check/:email')
     obtenirUtilisateurParEmail(@Param('email') email: string): Promise<boolean> {

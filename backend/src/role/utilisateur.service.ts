@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { Utilisateur } from './utilisateur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { LoginUtilisateurDto } from '../dtos/utilisateur.dto';
 
 @Injectable()
 export class UtilisateurService {
@@ -49,8 +50,8 @@ export class UtilisateurService {
         return this.utilisateurRepository.findOne({ where: { uid: uid } });
     }
 
-    async seConnecter(utilisateurData: unknown): Promise<object> {
-        const utilisateur = await this.utilisateurRepository.findOne({ where: { email: (utilisateurData as any).email } });
+    async seConnecter(utilisateurData: LoginUtilisateurDto): Promise<object> {
+        const utilisateur = await this.utilisateurRepository.findOne({ where: { email: utilisateurData.email } });
 
         if(!utilisateur) {
             return {
@@ -60,7 +61,7 @@ export class UtilisateurService {
                 }
             }
         }
-        if(utilisateur.mdp == (utilisateurData as any).mdp) {
+        if(utilisateur.mdp == utilisateurData.mdp) {
             return {
                 "errors": {
                     "email": false,

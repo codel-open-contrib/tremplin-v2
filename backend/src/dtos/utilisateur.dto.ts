@@ -1,6 +1,14 @@
 import { IsNotEmpty, IsOptional } from "class-validator";
 import { UtilisateurRole } from "../role/utilisateur-role.enum";
 
+export class LoginUtilisateurDto {
+    @IsNotEmpty()
+    email: string;
+
+    @IsNotEmpty()
+    mdp: string;
+}
+
 export class CreateUtilisateurDto {
     @IsNotEmpty()
     profile: string;
