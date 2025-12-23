@@ -176,8 +176,8 @@ function SignUp({signUpForm, setSignUpForm}: any) {
     }
 
     const currentISO = () => {
-        let date = new Date();
-        let currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
+        const date = new Date();
+        const currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
         return currentDate;
     }
 

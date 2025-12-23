@@ -3657,7 +3657,7 @@
   const _LONG_STYLE_TO_PREFIX = _objectSpread2({}, ua);
   _LONG_STYLE_TO_PREFIX[s] = _objectSpread2(_objectSpread2({}, _LONG_STYLE_TO_PREFIX[s]), Ct['kit']);
   const LONG_STYLE_TO_PREFIX = familyProxy(_LONG_STYLE_TO_PREFIX);
-  const ICON_SELECTION_SYNTAX_PATTERN = p; // eslint-disable-line no-useless-escape
+  const ICON_SELECTION_SYNTAX_PATTERN = p;  
 
   const LAYERS_TEXT_CLASSNAME = 'fa-layers-text';
   const FONT_FAMILY_PATTERN = g;
@@ -4037,7 +4037,7 @@
       if (value >= 0xD800 && value <= 0xDBFF && counter < length) {
         const extra = string.charCodeAt(counter++);
         if ((extra & 0xFC00) == 0xDC00) {
-          // eslint-disable-line eqeqeq
+           
           output.push(((value & 0x3FF) << 10) + (extra & 0x3FF) + 0x10000);
         } else {
           output.push(value);
@@ -4500,7 +4500,7 @@
     }
     const hookFns = _hooks[hook] || [];
     hookFns.forEach(hookFn => {
-      accumulator = hookFn.apply(null, [accumulator, ...args]); // eslint-disable-line no-useless-call
+      accumulator = hookFn.apply(null, [accumulator, ...args]);  
     });
     return accumulator;
   }

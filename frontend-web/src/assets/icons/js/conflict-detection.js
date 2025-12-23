@@ -521,7 +521,7 @@
     } else if (node.href) {
       return md5(node.href);
     } else if (node.innerText && '' !== node.innerText) {
-      // eslint-disable-line yoda
+       
       return md5(node.innerText);
     } else {
       return undefined;
@@ -555,7 +555,7 @@
             console.info(progressIndicator);
           }
           if (!!result) {
-            // eslint-disable-line no-extra-boolean-cast
+             
             resolve(result);
           } else {
             const nextDuration = 250;
@@ -563,7 +563,7 @@
             if (nextCumulativeDuration <= maxDuration) {
               poll(nextDuration, nextCumulativeDuration);
             } else {
-              reject('timeout'); // eslint-disable-line prefer-promise-reject-errors
+              reject('timeout');  
             }
           }
         }, duration);

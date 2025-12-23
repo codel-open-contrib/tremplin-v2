@@ -118,8 +118,8 @@ function SignModule({openModuleForm, setOpenModuleForm, module}: any) {
     }
 
     const currentISO = () => {
-        let date = new Date();
-        let currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
+        const date = new Date();
+        const currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
         return currentDate;
     };
 
@@ -201,7 +201,7 @@ function ChooseModule({module, choosed, setMontant}: any) {
     const [checked, setChecked] = useState(false);
 
     const chooseModule = (e: any) => {
-        let selected = e.target.checked;
+        const selected = e.target.checked;
         if(selected) {
             choosed.push(module);
         } else {
@@ -287,7 +287,7 @@ function CatalogueForm({open, setOpen}: any) {
     }
 
     const getTime = () => {
-        let date = new Date();
+        const date = new Date();
         let hours = date.getHours().toString();
         let minutes = date.getMinutes().toString();
         hours = hours.length < 2 ? "0" + hours : hours;
@@ -296,8 +296,8 @@ function CatalogueForm({open, setOpen}: any) {
     }
 
     const currentISO = () => {
-        let date = new Date();
-        let currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
+        const date = new Date();
+        const currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
         return currentDate;
     }
 

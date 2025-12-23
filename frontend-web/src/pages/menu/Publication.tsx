@@ -154,7 +154,7 @@ function PublicationForm({open, setOpen}: any) {
     }
 
     const getTime = () => {
-        let date = new Date();
+        const date = new Date();
         let hours = date.getHours().toString();
         let minutes = date.getMinutes().toString();
         hours = hours.length < 2 ? "0" + hours : hours;
@@ -163,8 +163,8 @@ function PublicationForm({open, setOpen}: any) {
     }
 
     const currentISO = () => {
-        let date = new Date();
-        let currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
+        const date = new Date();
+        const currentDate = setDateFormat(date.getDate().toString(), (date.getMonth() + 1).toString(), date.getFullYear().toString());
         return currentDate;
     }
     const [catalogueImage, setCatalogueImage] = useState("null");
