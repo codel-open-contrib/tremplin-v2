@@ -17,7 +17,7 @@ jobs:
       frontend-latest: ${{ steps.image.outputs.frontend-latest }}
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Docker meta
         id: meta
@@ -51,6 +51,9 @@ jobs:
           cd backend
           npm ci
           npm run build
+
+      - name: Remove old image
+        run: docker rmi tremplin-backend:local || true
 
       - name: Build Backend Docker Locally
         run: docker build --no-cache -t tremplin-backend:local .
