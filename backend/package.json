@@ -98,5 +98,9 @@
       "@nestjs/core",
       "@swc/core"
     ]
+  },
+  "overrides": {
+    "cross-spawn": "$cross-spawn",
+    "glob": "$glob"
   }
 }
