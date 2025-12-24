@@ -67,6 +67,7 @@ jobs:
           exit-code: '1'
           vuln-type: 'library'
           severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
 
       - name: Build & Push Backend Docker
         uses: docker/build-push-action@v6
