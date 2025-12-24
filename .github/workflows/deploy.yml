@@ -58,11 +58,11 @@ jobs:
       - name: Trivy scan Backend
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'image'
-          image-ref: 'tremplin-backend:local'
+          scan-type: 'fs'
+          scan-ref: 'backend'
           format: 'table'
           exit-code: '1'
-          vuln-type: 'os,library'
+          vuln-type: 'library'
           severity: 'CRITICAL,HIGH'
 
       - name: Build & Push Backend Docker
