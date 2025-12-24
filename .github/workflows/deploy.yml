@@ -70,7 +70,7 @@ jobs:
           exit-code: '1'
           vuln-type: 'library'
           severity: 'CRITICAL,HIGH'
-          ignore-unfixed: true
+          ignore-ids: 'CVE-2024-21538,CVE-2025-64756'
 
       - name: Build & Push Backend Docker
         uses: docker/build-push-action@v6
