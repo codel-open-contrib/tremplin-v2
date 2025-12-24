@@ -18,7 +18,10 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Check package.json
+        run: cat backend/package.json
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
