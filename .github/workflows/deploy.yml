@@ -53,7 +53,7 @@ jobs:
           npm run build
 
       - name: Build Backend Docker Locally
-        run: docker build -t tremplin-backend:local .
+        run: docker build --no-cache -t tremplin-backend:local .
 
       - name: Trivy scan Backend
         uses: aquasecurity/trivy-action@master
