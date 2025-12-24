@@ -56,10 +56,10 @@ jobs:
         run: docker build --no-cache -t tremplin-backend:local .
 
       - name: Trivy scan Backend
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.29.0
         with:
-          scan-type: 'fs'
-          scan-ref: 'backend'
+          scan-type: 'image'
+          image-ref: 'tremplin-backend:local'
           format: 'table'
           exit-code: '1'
           vuln-type: 'library'
