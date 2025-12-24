@@ -100,7 +100,14 @@
     ]
   },
   "overrides": {
-    "cross-spawn": "$cross-spawn",
-    "glob": "$glob"
+    "test-exclude": {
+      "glob": "7.2.3"
+    },
+    "rimraf": {
+      "glob": "7.2.3"
+    },
+    "istanbul-lib-source-maps": {
+      "glob": "7.2.3"
+    }
   }
 }
