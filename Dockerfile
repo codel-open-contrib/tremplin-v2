@@ -10,7 +10,7 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Installation de toutes les dépendances (dev inclus pour build)
-RUN npm ci --only=production=false
+RUN npm ci
 
 # Copier tout le code source
 COPY backend/ ./
