@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-api
+  namespace: dev
+  labels:
+    app.kubernetes.io/name: tremplin-backend
+    app.kubernetes.io/instance: backend-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tremplin-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tremplin-backend
+        app.kubernetes.io/instance: backend-api
+    spec:
+      imagePullSecrets:
+        - name: ghcr-auth
+      containers:
+      - name: backend-api
+        image: ghcr.io/codel-open-contrib/tremplin-backend:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        # AJOUT CRITIQUE POUR LA CONNEXION
+        - name: DB_HOST
+          value: "postgres"
+        - name: DB_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: "tremplin"
+        - name: POSTGRES_PASSWORD
+          value: "dev_password_123"
+        - name: POSTGRES_DB
+          value: "tremplin_dev"
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_PASSWORD
+          value: "redis_dev_password"
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
