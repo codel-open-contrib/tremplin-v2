@@ -20,7 +20,7 @@ metadata:
   name: prod
   labels:
     environment: production
-    project: tremplin-prime
+    project: tremplin-prime # Main production namespace
 ---
 apiVersion: v1
 kind: Namespace
