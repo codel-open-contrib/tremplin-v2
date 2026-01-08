@@ -7,19 +7,18 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
-  app.setGlobalPrefix("tremplin/api/v1");
+  app.setGlobalPrefix("api/v1");
   
-  // ✅ MODIFIÉ : Configuration CORS avec credentials pour authentification cross-origin
+  // modifié par njato
   app.enableCors({
     origin: [
-      'http://localhost:5173',       // Vite dev server local
-      'https://tremplin-eni.me',     // Domaine production
-      'http://134.199.235.124'       // IP VPS (accès direct)
+      'http://localhost:5173',       
+      'https://tremplin-eni.me',     
+      'http://134.199.235.124'       
     ],
-    credentials: true,                // Permet cookies/JWT/sessions entre domaines
+    credentials: true,                
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
-  // ❌ ANCIEN CODE : app.enableCors(); (trop permissif, pas de credentials)
   
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
