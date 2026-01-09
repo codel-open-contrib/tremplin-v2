@@ -72,7 +72,7 @@ function SignIn({signInForm, setSignInForm}: any) {
     const navigate = useNavigate();
     const validateForm = () => {
         const u = new Utilisateur();
-        u.seConnecter(login.email, login)
+        u.seConnecter(login)
         .then((r) => {
             if(!r.data.errors.email && !r.data.errors.mdp) {
                 // console.log(r.data.data);
@@ -248,7 +248,7 @@ function SignUp({signUpForm, setSignUpForm}: any) {
             "email": result.data.email,
             "mdp": result.data.mdp
         }
-        const userInfo = await u.seConnecter(result.data.email, singIn);
+        const userInfo = await u.seConnecter(singIn);
         // console.log(`inscrit ${JSON.stringify(result.data)}`);
         // console.log(`connect ${JSON.stringify(userInfo.data.data)}`);
         localStorage.setItem("client", JSON.stringify(userInfo.data.data));

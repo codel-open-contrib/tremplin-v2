@@ -31,8 +31,8 @@ export class Utilisateur {
         const init = axios.put(this.utilisateur + "/" + uid, data);
         return init;
     }
-    public seConnecter(email: string, data: any) {
-        const init = axios.post(this.utilisateur + "/" + email, data);
+    public seConnecter(data: any) {
+        const init = axios.post(this.utilisateur + "/login", data);
         return init;
     }
     public publierCatalogue(uid:number, data: any) {
