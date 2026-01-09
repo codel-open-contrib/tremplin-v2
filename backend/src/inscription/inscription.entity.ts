@@ -19,5 +19,5 @@ export class Inscription {
     moduleCours: ModuleCours;
 
     @ManyToOne('Utilisateur', 'inscriptions', { onDelete: 'CASCADE' })
-    utilisateur: any;
+    utilisateur: unknown;
 }

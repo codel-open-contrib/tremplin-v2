@@ -31,11 +31,11 @@ export class Utilisateur {
     role: UtilisateurRole;
 
     @OneToMany('Catalogue', 'utilisateur')
-    catalogues: any[];
+    catalogues: unknown[];
 
     @OneToMany('Annonce', 'utilisateur')
-    annonces: any[];
+    annonces: unknown[];
 
     @OneToMany('Inscription', 'utilisateur')
-    inscriptions: any[];
+    inscriptions: unknown[];
 }

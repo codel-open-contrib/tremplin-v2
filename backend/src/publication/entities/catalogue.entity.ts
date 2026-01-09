@@ -5,7 +5,7 @@ import { ModuleCours } from "../../module/module.entity";
 @Entity()
 export class Catalogue extends Publication {
     @ManyToOne('Utilisateur', 'catalogues')
-    utilisateur: any;
+    utilisateur: unknown;
 
     @OneToMany(() => ModuleCours, (moduleCours) => moduleCours.catalogue, { cascade: true, onDelete: 'CASCADE' })
     moduleCours: ModuleCours[]
