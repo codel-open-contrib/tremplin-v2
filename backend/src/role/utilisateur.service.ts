@@ -70,7 +70,7 @@ export class UtilisateurService {
                 "data": {
                     "uid": utilisateur.uid,
                     "profile": utilisateur.profile,
-                    "nom": utilisateur.mdp as unknown,
+                    "nom": utilisateur.nom,
                     "prenoms": utilisateur.prenoms,
                     "tel": utilisateur.tel,
                     "email": utilisateur.email

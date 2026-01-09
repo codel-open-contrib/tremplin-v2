@@ -1,8 +1,5 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { UtilisateurRole } from "./utilisateur-role.enum";
-import { Catalogue } from "../publication/entities/catalogue.entity";
-import { Annonce } from "../publication/entities/annonce.entity";
-import { Inscription } from "../inscription/inscription.entity";
 
 @Entity()
 export class Utilisateur {
@@ -33,12 +30,12 @@ export class Utilisateur {
     @Column({ type: 'enum', enum: UtilisateurRole })
     role: UtilisateurRole;
 
-    @OneToMany(() => Catalogue, (catalogue) => catalogue.utilisateur, { cascade: true })
-    catalogues: Catalogue[];
+    @OneToMany('Catalogue', 'utilisateur')
+    catalogues: any[];
 
-    @OneToMany(() => Annonce, (annonces) => annonces.utilisateur, { cascade: true })
-    annonces: Annonce[];
+    @OneToMany('Annonce', 'utilisateur')
+    annonces: any[];
 
-    @OneToMany(() => Inscription, (inscriptions) => inscriptions.utilisateur, { cascade: true })
-    inscriptions: Inscription[];
+    @OneToMany('Inscription', 'utilisateur')
+    inscriptions: any[];
 }

@@ -1,5 +1,4 @@
 import { ModuleCours } from "../module/module.entity";
-import { Utilisateur } from "../role/utilisateur.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
@@ -19,6 +18,6 @@ export class Inscription {
     @ManyToOne(() => ModuleCours, (moduleCours) => moduleCours.inscriptions, { onDelete: 'CASCADE' })
     moduleCours: ModuleCours;
 
-    @ManyToOne(() => Utilisateur, (utilisateur) => utilisateur.inscriptions, { onDelete: 'CASCADE' })
-    utilisateur: Utilisateur;
+    @ManyToOne('Utilisateur', 'inscriptions', { onDelete: 'CASCADE' })
+    utilisateur: any;
 }
