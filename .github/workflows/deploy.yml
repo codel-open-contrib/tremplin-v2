@@ -46,8 +46,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          #cache: 'npm'
-          #cache-dependency-path: 'backend/package-lock.json'
 
       - name: Install & Build backend
         run: |
@@ -150,32 +148,28 @@ jobs:
       
       - name: Deploy Backend and Frontend via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
+          LATEST_FRONTEND_IMAGE: ${{ needs.build-and-push.outputs.frontend-latest }}
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: LATEST_IMAGE,LATEST_FRONTEND_IMAGE
-        env:
-          LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
-          LATEST_FRONTEND_IMAGE: ${{ needs.build-and-push.outputs.frontend-latest }}
           script: |
             echo "🚀=== TREMPLIN BACKEND DEPLOY ==="
             cd ~
 
-            # Mise à jour du tag dans le YAML backend
-            sed -i "s|image: ghcr.io/.*|image: $LATEST_IMAGE|g" backend-dev.yaml
+            sed -i "s|image: ghcr.io/.*tremplin-backend.*|image: $LATEST_IMAGE|g" backend-dev.yaml
 
             echo "🔄 Applying updated backend-dev.yaml..."
             microk8s kubectl apply -f backend-dev.yaml
 
-            # Patch pour le secret d'auth backend
             microk8s kubectl patch deployment backend-api -n dev -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-auth"}]}}}}'
 
-            # Restart forcé backend
             echo "🔄 Restarting backend deployment..."
             microk8s kubectl rollout restart deployment/backend-api -n dev
 
-            # Vérification backend
             echo "⏳ Waiting for backend rollout (max 120s)..."
             microk8s kubectl rollout status deployment/backend-api -n dev --timeout=120s
 
@@ -184,20 +178,16 @@ jobs:
 
             echo "🚀=== TREMPLIN FRONTEND DEPLOY ==="
 
-            # Mise à jour du tag dans le YAML frontend
-            sed -i "s|image: ghcr.io/.*|image: $LATEST_FRONTEND_IMAGE|g" frontend-dev.yaml
+            sed -i "s|image: ghcr.io/.*tremplin-frontend.*|image: $LATEST_FRONTEND_IMAGE|g" frontend-dev.yaml
 
             echo "🔄 Applying updated frontend-dev.yaml..."
             microk8s kubectl apply -f frontend-dev.yaml
 
-            # Patch pour le secret d'auth frontend
             microk8s kubectl patch deployment frontend-app -n dev -p '{"spec":{"template":{"spec":{"imagePullSecrets":[{"name":"ghcr-auth"}]}}}}'
 
-            # Restart forcé frontend
             echo "🔄 Restarting frontend deployment..."
             microk8s kubectl rollout restart deployment/frontend-app -n dev
 
-            # Vérification frontend
             echo "⏳ Waiting for frontend rollout (max 120s)..."
             microk8s kubectl rollout status deployment/frontend-app -n dev --timeout=120s
 
