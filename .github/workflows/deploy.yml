@@ -28,7 +28,6 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/tremplin-backend
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
             type=sha,format=long,prefix=sha-
             type=ref,event=branch
       
@@ -87,7 +86,6 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/tremplin-frontend
           tags: |
-            enable={{is_default_branch}}
             type=sha,format=long,prefix=sha-
             type=ref,event=branch
 
@@ -160,7 +158,7 @@ jobs:
             echo "🚀=== TREMPLIN BACKEND DEPLOY ==="
             cd ~
 
-            sed -i "s|image: ghcr.io/.*tremplin-backend.*|image: $LATEST_IMAGE|g" backend-dev.yaml
+            sed -i "s|image: ghcr.io/.*tremplin-backend.*|image: ghcr.io/codel-open-contrib/tremplin-backend:live|g" backend-dev.yaml
 
             echo "🔄 Applying updated backend-dev.yaml..."
             microk8s kubectl apply -f backend-dev.yaml
