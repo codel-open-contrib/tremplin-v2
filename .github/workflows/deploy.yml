@@ -52,6 +52,7 @@ jobs:
       - name: Install & Build backend
         run: |
           cd backend
+          rm -rf node_modules .tsbuildinfo tsconfig.buid.tsbuildinfo
           npm ci
           npm run build
 
