@@ -8,7 +8,7 @@ function Landing() {
     return (
         <Container className="landing-page">
             <div className="hero">
-                <div className="greeting"><h1>Bienvenu sur Tremplin</h1></div>
+                <div className="greeting"><h1>Bienvenue sur Tremplin</h1></div>
                 <div className="short-description"><p>Une plateforme d'apprentissage en ligne et de partage de contenu educatif</p></div>
                 <Link to="/sign"><div className="sign-btn"><Button variant="contained" className="link-btn"><Login sx={{ marginRight: '8px' }} /> Se connecter</Button></div></Link>
                 <div className="target-icon"><img src={target} alt="target" /></div>

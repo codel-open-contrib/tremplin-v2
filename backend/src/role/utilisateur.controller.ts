@@ -7,6 +7,18 @@ import { Utilisateur } from './utilisateur.entity';
 export class UtilisateurController {
     constructor(private readonly utilisateurService: UtilisateurService) {};
 
+    // Routes spécifiques EN PREMIER
+    @Post('login')
+    seConnecter(@Body() utilisateurData: LoginUtilisateurDto): Promise<object> {
+        return this.utilisateurService.seConnecter(utilisateurData);
+    }
+
+    @Get('check/:email')
+    obtenirUtilisateurParEmail(@Param('email') email: string): Promise<boolean> {
+        return this.utilisateurService.obtenirUtilisateurParEmail(email);
+    }
+
+    // Routes génériques APRÈS
     @Post()
     ajouterUtilisateur(@Body() utilisateurData: CreateUtilisateurDto): Promise<Utilisateur> {
         return this.utilisateurService.ajouterUtilisateur(utilisateurData);
@@ -30,14 +42,5 @@ export class UtilisateurController {
     @Put(':uid')
     modifierUtilisateur(@Param('uid') uid: number, @Body() utilisateurData: UpdateUtilisateurDto): Promise<Utilisateur> {
         return this.utilisateurService.modifierUtilisateur(uid, utilisateurData);
-    }
-
-    @Post('login')
-    seConnecter(@Body() utilisateurData: LoginUtilisateurDto): Promise<object> {
-        return this.utilisateurService.seConnecter(utilisateurData);
-    }
-    @Get('/check/:email')
-    obtenirUtilisateurParEmail(@Param('email') email: string): Promise<boolean> {
-        return this.utilisateurService.obtenirUtilisateurParEmail(email);
     }
 }
