@@ -28,6 +28,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/tremplin-backend
           tags: |
+            type=raw,value=latest
             type=sha,format=long,prefix=sha-
             type=ref,event=branch
       
@@ -59,6 +60,7 @@ jobs:
       - name: Build Backend Docker Locally
         run: docker build --no-cache -t tremplin-backend:local .
 
+      # ✅ TRIVY EST CONSERVÉ ICI
       - name: Trivy scan Backend
         uses: aquasecurity/trivy-action@0.29.0
         with:
@@ -86,6 +88,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/tremplin-frontend
           tags: |
+            type=raw,value=latest
             type=sha,format=long,prefix=sha-
             type=ref,event=branch
 
@@ -105,6 +108,7 @@ jobs:
       - name: Build Frontend Docker Locally
         run: docker build -t tremplin-frontend:local ./frontend-web
 
+      # ✅ TRIVY EST CONSERVÉ ICI AUSSI
       - name: Trivy scan Frontend
         uses: aquasecurity/trivy-action@master
         with:
@@ -146,18 +150,15 @@ jobs:
       
       - name: Deploy Backend and Frontend via SSH
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          LATEST_IMAGE: ${{ needs.build-and-push.outputs.latest-tag }}
-          LATEST_FRONTEND_IMAGE: ${{ needs.build-and-push.outputs.frontend-latest }}
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: LATEST_IMAGE,LATEST_FRONTEND_IMAGE
           script: |
             echo "🚀=== TREMPLIN BACKEND DEPLOY ==="
             cd ~
 
+            # Force l'utilisation du tag :live (en dur)
             sed -i "s|image: ghcr.io/.*tremplin-backend.*|image: ghcr.io/codel-open-contrib/tremplin-backend:live|g" backend-dev.yaml
 
             echo "🔄 Applying updated backend-dev.yaml..."
@@ -176,7 +177,8 @@ jobs:
 
             echo "🚀=== TREMPLIN FRONTEND DEPLOY ==="
 
-            sed -i "s|image: ghcr.io/.*tremplin-frontend.*|image: $LATEST_FRONTEND_IMAGE|g" frontend-dev.yaml
+            # Force l'utilisation du tag :live (en dur) - PLUS DE VARIABLE $LATEST_FRONTEND_IMAGE
+            sed -i "s|image: ghcr.io/.*tremplin-frontend.*|image: ghcr.io/codel-open-contrib/tremplin-frontend:live|g" frontend-dev.yaml
 
             echo "🔄 Applying updated frontend-dev.yaml..."
             microk8s kubectl apply -f frontend-dev.yaml
