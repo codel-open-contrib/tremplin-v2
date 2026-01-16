@@ -1,60 +1,55 @@
 # ==========================================
-# Stage 1: Builder - Compilation TypeScript
+# Stage 1: Builder
 # ==========================================
 FROM node:20-alpine AS builder
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier les fichiers de dépendances
+# Copie des fichiers de dépendances (depuis le dossier backend vers la racine du container)
 COPY backend/package*.json ./
 
-# Installation de toutes les dépendances (dev inclus pour build)
+# Installation des dépendances
 RUN npm ci
 
-# Copier tout le code source
+# Copie du reste du code source
 COPY backend/ ./
 
-# Build de l'application NestJS
+# Compilation
 RUN npm run build
-
-# Nettoyer les devDependencies
 RUN npm prune --production
 
 # ==========================================
-# Stage 2: Production - Image finale légère
+# Stage 2: Production
 # ==========================================
 FROM node:20-alpine AS production
 
-# Installer curl pour health checks
+# Outils système minimaux
 RUN apk add --no-cache curl
 
-# Créer un utilisateur non-root pour la sécurité
+# Sécurité (utilisateur non-root)
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nestjs -u 1001 -G nodejs
 
-# Définir le répertoire de travail
 WORKDIR /app
 
-# Copier node_modules et code compilé depuis builder
+# COPIE CRITIQUE : On prend les fichiers depuis le builder
+# Le builder a tout mis dans /app, donc on récupère depuis /app
 COPY --from=builder --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
 COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
 
-# Variables d'environnement par défaut
+# Variables d'environnement
 ENV NODE_ENV=production \
     PORT=3000 \
     TZ=Africa/Nairobi
 
-# Exposer le port de l'application
 EXPOSE 3000
 
-# Basculer vers l'utilisateur non-root
 USER nestjs
 
-# Health check pour Kubernetes
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3000/health || exit 1
 
-# Commande de démarrage
+# Démarrage
 CMD ["node", "dist/main.js"]
